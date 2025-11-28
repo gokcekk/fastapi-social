@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 """ Endpoint: View posts on the user's own wall"""
-@router.get("/{user_id}", response_model=list[schemas.PostResponse])
+@router.get("/{user_id}", response_model=list[schemas.Post])
 def get_user_wall(user_id: int, db: Session = Depends(get_db)):
     """
     Returns all posts on the user's own wall.
@@ -34,5 +34,3 @@ def get_user_wall(user_id: int, db: Session = Depends(get_db)):
         .all()
     )
     return posts
-
-
