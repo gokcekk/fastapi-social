@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:app/routers/user_activities.py
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -47,6 +48,24 @@ friend_requests: List[Dict] = []     # friend request list
 
 def create_user_service(user: UserCreate):
 >>>>>>> Stashed changes:app/services/friend_requests.py
+=======
+from fastapi import HTTPException
+from typing import Dict, List
+
+from app.schemas.friend_requests import (
+    UserCreate,
+    FriendRequestCreate,
+    FriendRequestResponse,
+)
+
+# --- In-memory (temporary) database ---
+users: Dict[int, str] = {}   # user_id -> user_name
+friends: Dict[int, List[int]] = {}  # user_id -> list of friend_ids
+friend_requests: List[Dict] = []     # friend request list
+
+
+def create_user_service(user: UserCreate):
+>>>>>>> Stashed changes
     if user.user_id in users:
         raise HTTPException(status_code=400, detail="User already exists")
 
@@ -55,11 +74,14 @@ def create_user_service(user: UserCreate):
     return {"message": "User created", "user": user}
 
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:app/routers/user_activities.py
 # --- Send a friend request ---
 @app.post("/friend-request")
 def send_friend_request(req: FriendRequestCreate):
 =======
+=======
+>>>>>>> Stashed changes
 def send_friend_request_service(req: FriendRequestCreate):
 
 >>>>>>> Stashed changes:app/services/friend_requests.py
@@ -88,6 +110,7 @@ def send_friend_request_service(req: FriendRequestCreate):
     return {"message": "Friend request sent!"}
 
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:app/routers/user_activities.py
 # --- Get incoming friend requests for a user ---
 @app.get("/friend-request/{user_id}")
@@ -101,6 +124,8 @@ def get_friend_requests(user_id: int):
 def respond_request(response: FriendRequestResponse):
     # Check if request exists
 =======
+=======
+>>>>>>> Stashed changes
 def get_incoming_requests_service(user_id: int):
     if user_id not in users:
         raise HTTPException(status_code=404, detail="User not found")
@@ -131,19 +156,25 @@ def respond_request_service(response: FriendRequestResponse):
     if response.action not in ["approve", "deny"]:
         raise HTTPException(status_code=400, detail="Invalid action")
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:app/routers/user_activities.py
     # Approve the request
 =======
 >>>>>>> Stashed changes:app/services/friend_requests.py
+=======
+>>>>>>> Stashed changes
     if response.action == "approve":
         friends[fr["from_id"]].append(fr["to_id"])
         friends[fr["to_id"]].append(fr["from_id"])
         fr["status"] = "approved"
         return {"message": "Friend request approved"}
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:app/routers/user_activities.py
     # Deny the request
 =======
 >>>>>>> Stashed changes:app/services/friend_requests.py
+=======
+>>>>>>> Stashed changes
     fr["status"] = "denied"
     return {"message": "Friend request denied"}
