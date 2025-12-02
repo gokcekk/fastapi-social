@@ -77,6 +77,8 @@ class UserRead(UserBase):
 
 
 class UserUpdate(BaseModel):
+    # new
+    #commit
     """
     Schema for updating profile information (REQUEST body).
 

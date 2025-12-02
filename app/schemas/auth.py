@@ -22,7 +22,7 @@ class Token(BaseModel):
     """
     # The JWT access token string
     access_token: str
-
+    #note
     # The type of the token, usually "bearer"
     # Default value is set here, so when we create Token(...),
     # we only need to pass access_token.
