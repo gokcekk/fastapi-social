@@ -12,7 +12,7 @@ from app.models.user import User
 # OAuth2PasswordBearer:
 # - Tells FastAPI that we use "Bearer <token>" in the Authorization header
 # - tokenUrl is used in the Swagger UI "Authorize" button
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def get_current_user(

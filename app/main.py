@@ -21,8 +21,8 @@ Base.metadata.create_all(bind=engine)
 # Attach the routers to the main application
 # `prefix="/api/v1"` means all endpoints from these routers
 # will start with `/api/v1/...`
-app.include_router(auth_router, prefix="/api/v1")   # endpoints for authentication and tokens
-app.include_router(users_router, prefix="/api/v1")  # endpoints for user CRUD operations
+app.include_router(auth_router)   # endpoints for authentication and tokens
+app.include_router(users_router)  # endpoints for user CRUD operations
 
 
 @app.get("/")

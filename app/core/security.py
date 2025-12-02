@@ -21,7 +21,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 #   - How long the token is valid (here: 60 minutes)
 SECRET_KEY = "super_secret_key_change_me"  # For learning only, change in real apps
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60000000000000000000000000000000000000000000000000000
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 72
 
 
 def hash_password(password: str) -> str:
