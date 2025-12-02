@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:app/routers/user_activities.py
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -31,6 +32,8 @@ class FriendRequestResponse(BaseModel):
 @app.post("/users")
 def create_user(user: UserCreate):
 =======
+=======
+>>>>>>> Stashed changes
 from fastapi import HTTPException
 from typing import Dict, List
 
@@ -47,6 +50,7 @@ friend_requests: List[Dict] = []     # friend request list
 
 
 def create_user_service(user: UserCreate):
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:app/services/friend_requests.py
 =======
 from fastapi import HTTPException
@@ -66,11 +70,14 @@ friend_requests: List[Dict] = []     # friend request list
 
 def create_user_service(user: UserCreate):
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     if user.user_id in users:
         raise HTTPException(status_code=400, detail="User already exists")
 
     users[user.user_id] = user.name
     friends[user.user_id] = []
+<<<<<<< Updated upstream
     return {"message": "User created", "user": user}
 
 
@@ -92,13 +99,34 @@ def send_friend_request_service(req: FriendRequestCreate):
 <<<<<<< Updated upstream:app/routers/user_activities.py
         raise HTTPException(status_code=400, detail="Already friends")
 =======
+=======
+
+    return {
+        "message": "User created successfully",
+        "user": {"id": user.user_id, "name": user.name}
+    }
+
+
+def send_friend_request_service(req: FriendRequestCreate):
+
+    if req.from_id not in users or req.to_id not in users:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if req.from_id == req.to_id:
+        raise HTTPException(status_code=400, detail="Cannot send request to yourself")
+
+    if req.to_id in friends[req.from_id]:
+>>>>>>> Stashed changes
         raise HTTPException(status_code=400, detail="You are already friends")
 
     # Duplicate check
     for fr in friend_requests:
         if fr["from_id"] == req.from_id and fr["to_id"] == req.to_id and fr["status"] == "pending":
             raise HTTPException(status_code=400, detail="Friend request already sent")
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:app/services/friend_requests.py
+=======
+>>>>>>> Stashed changes
 
     friend_requests.append({
         "id": len(friend_requests),
@@ -107,6 +135,7 @@ def send_friend_request_service(req: FriendRequestCreate):
         "status": "pending"
     })
 
+<<<<<<< Updated upstream
     return {"message": "Friend request sent!"}
 
 
@@ -126,6 +155,11 @@ def respond_request(response: FriendRequestResponse):
 =======
 =======
 >>>>>>> Stashed changes
+=======
+    return {"message": "Friend request sent successfully"}
+
+
+>>>>>>> Stashed changes
 def get_incoming_requests_service(user_id: int):
     if user_id not in users:
         raise HTTPException(status_code=404, detail="User not found")
@@ -144,23 +178,33 @@ def get_incoming_requests_service(user_id: int):
 
 def respond_request_service(response: FriendRequestResponse):
 
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:app/services/friend_requests.py
+=======
+>>>>>>> Stashed changes
     if response.request_id >= len(friend_requests):
         raise HTTPException(status_code=404, detail="Friend request not found")
 
     fr = friend_requests[response.request_id]
 
     if fr["status"] != "pending":
+<<<<<<< Updated upstream
         raise HTTPException(status_code=400, detail="Request already handled")
+=======
+        raise HTTPException(status_code=400, detail="Request already processed")
+>>>>>>> Stashed changes
 
     if response.action not in ["approve", "deny"]:
         raise HTTPException(status_code=400, detail="Invalid action")
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:app/routers/user_activities.py
     # Approve the request
 =======
 >>>>>>> Stashed changes:app/services/friend_requests.py
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
     if response.action == "approve":
@@ -170,10 +214,13 @@ def respond_request_service(response: FriendRequestResponse):
         return {"message": "Friend request approved"}
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:app/routers/user_activities.py
     # Deny the request
 =======
 >>>>>>> Stashed changes:app/services/friend_requests.py
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
     fr["status"] = "denied"

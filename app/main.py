@@ -30,6 +30,9 @@ app = FastAPI(title="Social Network - Friend Request System")
 app.include_router(friend_request_router)
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
