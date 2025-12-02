@@ -3,33 +3,34 @@
 from fastapi import FastAPI
 
 from app.db.database import Base, engine
+from app import models  # make sure all models are imported
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
+from app.routers.posts import router as posts_router
 
-# Create the main FastAPI application object
-# This is what Uvicorn runs: `uvicorn app.main:app --reload`
+
+# Main FastAPI application
 app = FastAPI(
-    title="Social Network API",  # Title shown in the Swagger UI
-    version="0.1.0",             # API version, useful for documentation
+    title="Social Network API",
+    version="0.1.0",
 )
+
 
 # Create all database tables based on the SQLAlchemy models
 # This is suitable for local development or very early stages
 # In a real project you normally use migrations (for example Alembic)
 Base.metadata.create_all(bind=engine)
 
-# Attach the routers to the main application
-# `prefix="/api/v1"` means all endpoints from these routers
-# will start with `/api/v1/...`
-app.include_router(auth_router)   # endpoints for authentication and tokens
-app.include_router(users_router)  # endpoints for user CRUD operations
+
+# Include routers
+app.include_router(auth_router)      # authentication and tokens
+app.include_router(users_router)     # user profile endpoints
+app.include_router(posts_router)     # posts on user walls
 
 
 @app.get("/")
 def read_root():
     """
-    Health check endpoint.
-    Useful for seeing if the API is running.
-    Returns a simple JSON message.
+    Simple health check endpoint.
     """
     return {"message": "Social Network API is running"}
