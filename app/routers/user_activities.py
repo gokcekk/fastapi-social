@@ -73,9 +73,9 @@ def send_friend_request(req: FriendRequestCreate):
     return {"message": "Friend request sent successfully"}
 
 
-# -------------------------
+
 # GET INCOMING REQUESTS
-# -------------------------
+
 @app.get("/friend-request/{user_id}", summary="Get incoming friend requests", tags=["Friend Requests"])
 def get_friend_requests(user_id: int):
 
