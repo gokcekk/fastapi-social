@@ -45,7 +45,7 @@ class UserRead(UserBase):
     Schema for reading user data (RESPONSE body).
 
     Used in:
-    - POST /api/v1/auth/register (response_model=UserRead)
+    - POST /auth/register (response_model=UserRead)
     - GET /api/v1/users/me (response_model=UserRead)
     - PUT /api/v1/users/me (response_model=UserRead)
 

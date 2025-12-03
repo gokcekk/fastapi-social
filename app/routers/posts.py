@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.posts import Post as PostModel
 from app.schemas.posts import Post as PostSchema, PostCreate
+from app.core.auth import get_current_user
+from app.models.user import User
+
 
 
 router = APIRouter(
@@ -15,13 +18,21 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[PostSchema])
-def read_posts(db: Session = Depends(get_db)):
+def read_posts(
+    db: Session = Depends(get_db)
+    
+    ):
     """Get all posts"""
     return db.query(PostModel).all()
 
 
 @router.post("/", response_model=PostSchema)
-def create_post(post: PostCreate, db: Session = Depends(get_db)):
+def create_post(
+    post: PostCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+ 
+    ):
     """Create a new post"""
     db_post = PostModel(user=post.user, content=post.content)
     db.add(db_post)
