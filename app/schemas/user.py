@@ -6,6 +6,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
+
 class UserBase(BaseModel):
     """
     Shared fields for user related schemas.
@@ -28,7 +29,7 @@ class UserCreate(UserBase):
     Schema for creating a new user (REQUEST body).
 
     Used in:
-    - POST /api/v1/auth/register
+    - POST /auth/register
 
     Client sends:
     - username
@@ -46,8 +47,8 @@ class UserRead(UserBase):
 
     Used in:
     - POST /auth/register (response_model=UserRead)
-    - GET /api/v1/users/me (response_model=UserRead)
-    - PUT /api/v1/users/me (response_model=UserRead)
+    - GET /users/me (response_model=UserRead)
+    - PUT /users/me (response_model=UserRead)
 
     It defines what the API returns to the client
     when sending back user information.

@@ -1,10 +1,20 @@
 # app/models/user.py
 
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Table, ForeignKey
+from sqlalchemy.orm import relationship
+
+
 
 from app.db.database import Base
 
+# Self-referential many-to-many association table for friendships
+user_friends = Table(
+    "user_friends",
+    Base.metadata,
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("friend_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+)
 
 class User(Base):
     
@@ -59,3 +69,17 @@ class User(Base):
     # URL of the avatar image for the user
     # For example, a link to a profile picture
     avatar_url = Column(String(255), nullable=True)
+
+    posts = relationship(
+        "Post",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
+
+    friends = relationship(
+        "User",
+        secondary=user_friends,
+        primaryjoin=id == user_friends.c.user_id,
+        secondaryjoin=id == user_friends.c.friend_id,
+        backref="friends_with",
+    )

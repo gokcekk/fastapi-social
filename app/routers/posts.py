@@ -10,7 +10,6 @@ from app.core.auth import get_current_user
 from app.models.user import User
 
 
-
 router = APIRouter(
     prefix="/post",
     tags=["posts"],
@@ -19,24 +18,23 @@ router = APIRouter(
 
 @router.get("/", response_model=list[PostSchema])
 def read_posts(
-    db: Session = Depends(get_db)
-    
-    ):
+    db: Session = Depends(get_db),
+):
     """Get all posts"""
     return db.query(PostModel).all()
 
 
 @router.post("/", response_model=PostSchema)
 def create_post(
-    post: PostCreate, 
+    post: PostCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
- 
-    ):
+):
     """Create a new post"""
     db_post = PostModel(
-        user=current_user.username, 
-        content=post.content)
+        content=post.content,
+        user_id=current_user.id,
+    )
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
@@ -44,7 +42,10 @@ def create_post(
 
 
 @router.get("/{post_id}", response_model=PostSchema)
-def read_post(post_id: int, db: Session = Depends(get_db)):
+def read_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
     """Get a post by id"""
     post = db.query(PostModel).filter(PostModel.id == post_id).first()
     if not post:
@@ -54,19 +55,19 @@ def read_post(post_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{post_id}", response_model=PostSchema)
 def update_post(
-    post_id: int, 
-    updated_post: PostCreate, 
+    post_id: int,
+    updated_post: PostCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-    ):
+    current_user: User = Depends(get_current_user),
+):
     """Update a post"""
     post = db.query(PostModel).filter(PostModel.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    
-    if post.user != current_user.username:
-        raise HTTPException(status_code=403, detail="Not allowed to edit this post")
 
+    # Only the owner can edit this post
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not allowed to edit this post")
 
     post.content = updated_post.content
     db.commit()
@@ -85,11 +86,10 @@ def delete_post(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    # Sadece kendi post'unu silebilsin
-    if post.user != current_user.username:
+    # Only the owner can delete this post
+    if post.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not allowed to delete this post")
 
     db.delete(post)
     db.commit()
     return {"detail": "Post deleted"}
-

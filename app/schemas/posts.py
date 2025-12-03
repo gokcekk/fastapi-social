@@ -1,8 +1,10 @@
+# app/schemas/posts.py
+
+
 from pydantic import BaseModel
 from datetime import datetime
 
 class PostBase(BaseModel):
-    user: str
     content: str
 
 class PostCreate(PostBase):
@@ -10,6 +12,7 @@ class PostCreate(PostBase):
 
 class Post(PostBase):
     id: int
+    user_id: int
     created_at: datetime
 
     class Config:

@@ -7,6 +7,7 @@ from app import models  # make sure all models are imported
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
 from app.routers.posts import router as posts_router
+from app.routers.friend_request import router as friend_request_router
 
 
 # Main FastAPI application
@@ -26,7 +27,7 @@ Base.metadata.create_all(bind=engine)
 app.include_router(auth_router)      # authentication and tokens
 app.include_router(users_router)     # user profile endpoints
 app.include_router(posts_router)     # posts on user walls
-
+app.include_router(friend_request_router)  
 
 @app.get("/")
 def read_root():
