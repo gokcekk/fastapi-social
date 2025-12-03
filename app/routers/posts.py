@@ -34,7 +34,9 @@ def create_post(
  
     ):
     """Create a new post"""
-    db_post = PostModel(user=post.user, content=post.content)
+    db_post = PostModel(
+        user=current_user.username, 
+        content=post.content)
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
@@ -51,11 +53,21 @@ def read_post(post_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{post_id}", response_model=PostSchema)
-def update_post(post_id: int, updated_post: PostCreate, db: Session = Depends(get_db)):
+def update_post(
+    post_id: int, 
+    updated_post: PostCreate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+    ):
     """Update a post"""
     post = db.query(PostModel).filter(PostModel.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+    
+    if post.user != current_user.username:
+        raise HTTPException(status_code=403, detail="Not allowed to edit this post")
+
+
     post.content = updated_post.content
     db.commit()
     db.refresh(post)
@@ -63,11 +75,21 @@ def update_post(post_id: int, updated_post: PostCreate, db: Session = Depends(ge
 
 
 @router.delete("/{post_id}")
-def delete_post(post_id: int, db: Session = Depends(get_db)):
+def delete_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Delete a post"""
     post = db.query(PostModel).filter(PostModel.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+
+    # Sadece kendi post'unu silebilsin
+    if post.user != current_user.username:
+        raise HTTPException(status_code=403, detail="Not allowed to delete this post")
+
     db.delete(post)
     db.commit()
     return {"detail": "Post deleted"}
+
