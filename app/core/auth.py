@@ -22,16 +22,15 @@ def get_current_user(
     """
     Dependency that returns the current authenticated user.
 
-    How it works:
-    1. Reads the JWT access token from the Authorization header
-       using oauth2_scheme.
-    2. Decodes the token using SECRET_KEY and ALGORITHM.
-    3. Extracts the username from the "sub" claim.
-    4. Looks up the user in the database.
-    5. If anything fails, raises a 401 Unauthorized error.
+    Steps:
+    1. Read the JWT access token from the Authorization header using oauth2_scheme.
+    2. Decode the token with SECRET_KEY and ALGORITHM.
+    3. Get the username from the "sub" claim.
+    4. Look up the user in the database.
+    5. If any step fails, raise a 401 Unauthorized error.
     """
 
-    # Prepare a reusable exception for invalid or missing credentials
+    # Reusable exception for all "invalid credentials" cases
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials.",
@@ -39,34 +38,30 @@ def get_current_user(
     )
 
     try:
-        # Decode the JWT token:
-        # - token: the string from "Authorization: Bearer <token>"
-        # - SECRET_KEY and ALGORITHM are used to verify the signature
+        # Decode the JWT token from "Authorization: Bearer <token>"
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        # Get the username from the "sub" claim in the token payload
-        # "sub" usually means "subject", the identity of the token owner
+        # Get the username from the "sub" (subject) claim
         username: str | None = payload.get("sub")
 
-        # If there is no "sub" in the token, the token is not valid
+        # If there is no "sub", the token is not valid
         if username is None:
             raise credentials_exception
 
     except JWTError:
-        # Any error while decoding:
-        # - token expired
-        # - wrong signature
-        # - corrupted token
-        # We treat all of these as invalid credentials
+        # Any error while decoding the token:
+        # - expired token
+        # - invalid signature
+        # - malformed token
+        # All are treated as invalid credentials
         raise credentials_exception
 
-    # Query the database for a user with this username
+    # Look up the user in the database
     user = db.query(User).filter(User.username == username).first()
 
-    # If no such user exists in the database, credentials are invalid
+    # If no user exists with this username, credentials are invalid
     if user is None:
         raise credentials_exception
 
-    # If everything is fine, return the User object.
-    # FastAPI will inject this into endpoints that depend on get_current_user.
+    # If everything is OK, return the User object
     return user
