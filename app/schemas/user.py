@@ -82,7 +82,7 @@ class UserUpdate(BaseModel):
     Schema for updating profile information (REQUEST body).
 
     Used in:
-    - PUT /api/v1/users/me
+    - PUT /users/me
 
     All fields are optional:
     - If a field is provided, it will be updated.
@@ -98,7 +98,7 @@ class UserLogin(BaseModel):
     Schema for login credentials (REQUEST body).
 
     Used in:
-    - POST /api/v1/auth/login
+    - POST /auth/login
 
     Client sends:
     - username

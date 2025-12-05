@@ -22,12 +22,14 @@ engine = create_engine(
     connect_args={"check_same_thread": False},
 )
 
+"""
+    SessionLocal is a "factory" that will create Session objects.
+    Each Session is a "conversation" with the database.
+    autocommit=False: We control when to commit manually.
+    autoflush=False: Changes are not sent to the database automatically,
+                 we control when to flush or commit.
+"""
 
-# SessionLocal is a "factory" that will create Session objects.
-# Each Session is a "conversation" with the database.
-# autocommit=False: We control when to commit manually.
-# autoflush=False: Changes are not sent to the database automatically,
-#                  we control when to flush or commit.
 SessionLocal = sessionmaker(
     bind=engine,
     autocommit=False,
@@ -42,16 +44,16 @@ Base = declarative_base()
 
 
 def get_db():
+    """
+    Dependency used in FastAPI to provide a database session.
 
-    # Dependency used in FastAPI to provide a database session.
-
-    # How it works in a path operation:
-    # - FastAPI calls get_db and creates a SessionLocal instance.
-    # - The session is yielded to the path function
-    #   (for example, def register(..., db: Session = Depends(get_db))).
-    # - After the request is handled, the "finally" block runs
-    #   and the session is closed.
-
+    How it works in a path operation:
+    - FastAPI calls get_db and creates a SessionLocal instance.
+    - The session is yielded to the path function
+      (for example, def register(..., db: Session = Depends(get_db))).
+    - After the request is handled, the "finally" block runs
+      and the session is closed.
+    """
     db = SessionLocal()
     try:
         # Give the database session to the caller (FastAPI will handle the yield)

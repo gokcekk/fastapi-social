@@ -8,7 +8,7 @@ class Token(BaseModel):
     Schema for the authentication token returned after a successful login.
 
     Used in:
-    - POST /api/v1/auth/login  (response_model=Token)
+    - POST /auth/login  (response_model=Token)
 
     Fields:
     - access_token: The actual JWT string that the client must send

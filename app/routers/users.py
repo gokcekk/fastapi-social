@@ -21,6 +21,7 @@ def read_current_user(current_user: User = Depends(get_current_user)):
     """Return the profile of the currently authenticated user."""
     return current_user
 
+# TODO: Move user profile business logic to a dedicated service layer (app/services/user.py)
 
 @router.put("/me", response_model=UserRead)
 def update_current_user(
