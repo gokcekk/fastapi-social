@@ -32,7 +32,7 @@ def register(
 
 @router.post(
         "/login", response_model=Token,
-        status_code=status.HTTP_201_CREATED,)
+        status_code=status.HTTP_200_OK,)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
@@ -47,7 +47,7 @@ def login(
 
 @router.post(
         "/logout",
-        status_code=status.HTTP_201_CREATED,)
+        status_code=status.HTTP_200_OK,)
 def logout(current_user: User = Depends(get_current_user)):
     """
     Log out the current user.
