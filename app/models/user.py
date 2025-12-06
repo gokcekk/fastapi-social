@@ -125,3 +125,9 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    # All group memberships for this user
+    group_memberships = relationship(
+        "GroupMembership",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )

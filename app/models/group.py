@@ -27,3 +27,11 @@ class Group(Base):
 
     # Relationship to the User model
     owner = relationship("User", back_populates="groups_owned")
+
+        # All membership rows for this group
+    memberships = relationship(
+        "GroupMembership",
+        back_populates="group",
+        cascade="all, delete-orphan",
+    )
+
