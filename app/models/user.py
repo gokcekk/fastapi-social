@@ -117,3 +117,11 @@ class User(Base):
         secondaryjoin=id == user_friends.c.friend_id,
         backref="friends_with",
     )
+
+
+    groups_owned = relationship(
+        "Group",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
+
