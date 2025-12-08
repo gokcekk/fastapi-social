@@ -9,15 +9,16 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.group import GroupCreate, GroupRead
-from app.services.group import create_group
+from app.models.group import Group
+from app.schemas.group import GroupCreate, GroupRead, GroupUpdate
+from app.services.group import create_group, update_group
 
 router = APIRouter(
     prefix="/groups",
     tags=["groups"],
 )
 
-
+# TEMP for local testing, will be removed
 # Story 6
 
 
@@ -40,4 +41,24 @@ def create_group_endpoint (
 
 
 # Story 8
+
+@router.put(
+    "/{group_id}",
+    response_model=GroupRead,
+    status_code=status.HTTP_200_OK,
+)
+def update_group_endpoint(
+    group_id: int,
+    group_update: GroupUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+
+):
+    return update_group(
+        group_id=group_id,
+        group_in=group_update,
+        db=db,
+        current_user=current_user,
+
+    )
 
