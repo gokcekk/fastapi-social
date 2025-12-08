@@ -16,15 +16,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[PostSchema])
-def read_posts(
-    db: Session = Depends(get_db),
-):
-    """Get all posts"""
-    return db.query(PostModel).all()
-
-
-@router.post("/", response_model=PostSchema)
+@router.post("/", response_model=PostSchema, status_code=201)
 def create_post(
     post: PostCreate,
     db: Session = Depends(get_db),
@@ -39,6 +31,59 @@ def create_post(
     db.commit()
     db.refresh(db_post)
     return db_post
+
+
+@router.get("/me", response_model=list[PostSchema])
+def read_my_posts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get only the logged in user's posts"""
+    return (
+        db.query(PostModel)
+        .filter(PostModel.user_id == current_user.id)
+        .order_by(PostModel.created_at.desc())
+        .all()
+    )
+
+
+@router.get("/feed", response_model=list[PostSchema])
+def read_friends_posts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get posts from approved friends only"""
+
+    # Get list of friend's user_ids
+    friend_ids = [friend.id for friend in current_user.friends]
+
+    if not friend_ids:
+        return []  # user has no friends yet
+
+    return (
+        db.query(PostModel)
+        .filter(PostModel.user_id.in_(friend_ids))
+        .order_by(PostModel.created_at.desc())
+        .all()
+    )
+
+
+@router.get("/", response_model=list[PostSchema])
+def read_posts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get all posts"""
+    # Show user + friends posts together
+    friend_ids = [friend.id for friend in current_user.friends]
+    allowed_ids = friend_ids + [current_user.id]
+
+    return (
+        db.query(PostModel)
+        .filter(PostModel.user_id.in_(allowed_ids))
+        .order_by(PostModel.created_at.desc())
+        .all()
+    )
 
 
 @router.get("/{post_id}", response_model=PostSchema)
@@ -93,3 +138,5 @@ def delete_post(
     db.delete(post)
     db.commit()
     return {"detail": "Post deleted"}
+
+
