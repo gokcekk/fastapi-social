@@ -1,6 +1,6 @@
 # app/routers/posts.py
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -94,7 +94,7 @@ def read_post(
     """Get a post by id"""
     post = db.query(PostModel).filter(PostModel.id == post_id).first()
     if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
     return post
 
 
@@ -108,11 +108,11 @@ def update_post(
     """Update a post"""
     post = db.query(PostModel).filter(PostModel.id == post_id).first()
     if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
 
     # Only the owner can edit this post
     if post.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not allowed to edit this post")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Not allowed to edit this post")
 
     post.content = updated_post.content
     db.commit()
@@ -129,11 +129,11 @@ def delete_post(
     """Delete a post"""
     post = db.query(PostModel).filter(PostModel.id == post_id).first()
     if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
 
     # Only the owner can delete this post
     if post.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not allowed to delete this post")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Not allowed to delete this post")
 
     db.delete(post)
     db.commit()
