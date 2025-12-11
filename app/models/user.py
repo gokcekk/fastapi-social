@@ -83,3 +83,17 @@ class User(Base):
         secondaryjoin=id == user_friends.c.friend_id,
         backref="friends_with",
     )
+
+    groups = relationship(
+        "Group",
+        secondary="group_members",
+        back_populates="members",
+    )
+
+    group_posts = relationship(
+        "GroupPost",
+        back_populates="author",
+        cascade="all, delete-orphan",
+    )
+
+
