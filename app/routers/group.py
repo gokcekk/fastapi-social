@@ -1,12 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List
 
 from app.db.database import get_db
 from app.models.group import Group, GroupPost
-from app.models.group import Group
-from app.schemas.group import GroupOut,GroupPostOut,GroupPostCreate,GroupCreate
+from app.models.group_membership import GroupMembership
+from app.schemas.group import (
+    GroupOut, GroupCreate, GroupUpdate,
+    GroupMemberRead,
+    GroupPostCreate, GroupPostOut,
+)
+
+from app.services.group import update_group, list_group_members, remove_group_member
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.core.auth import get_current_user
 
 
 router = APIRouter(
@@ -16,10 +23,16 @@ router = APIRouter(
 
 
 """ST-6.0: Create a new group."""
-@router.post("/", response_model=GroupOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+      "/", 
+      response_model=GroupOut, 
+      status_code=status.HTTP_201_CREATED
+      )
 def create_group(
    group_in: GroupCreate,
-   db:Session = Depends(get_db)
+   db:Session = Depends(get_db),
+   current_user: User = Depends(get_current_user), #creator must become admin
+
 ):
 #check if there is a group with the same name
      existing =db.query(Group).filter(Group.name == group_in.name).first()
@@ -30,14 +43,27 @@ def create_group(
 
         )
      
+      # 1) Create the group
      group = Group(
         name=group_in.name,
         description=group_in.description,
+        owner_id=current_user.id,
+
      )
 
      db.add(group)
      db.commit()
      db.refresh(group)
+
+         # 2) Create a membership row for the creator as admin
+     membership = GroupMembership(
+        group_id=group.id,
+        user_id=current_user.id,
+        is_admin=True,
+    )
+
+     db.add(membership)
+     db.commit()
 
      return group
 
@@ -182,3 +208,65 @@ def create_group_post(
    db.refresh(group_post)
 
    return group_post
+
+
+
+#User Story 8
+
+
+@router.put(
+    "/{group_id}",
+    response_model=GroupOut,
+    status_code=status.HTTP_200_OK,
+)
+def update_group_endpoint(
+    group_id: int,
+    group_update: GroupUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+
+):
+    return update_group(
+        group_id=group_id,
+        group_in=group_update,
+        db=db,
+        current_user=current_user,
+
+    )
+
+@router.get(
+    "/{group_id}/members",
+    response_model=list[GroupMemberRead], 
+    status_code=status.HTTP_200_OK
+    
+)
+def list_group_members_endpoint (
+    group_id: int,
+    db:Session= Depends(get_db),
+    current_user:User = Depends(get_current_user),
+
+):
+    return list_group_members(
+        db=db,
+        group_id=group_id,
+        current_user=current_user,
+    )
+
+@router.delete(
+    "/{group_id}/members/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+
+def remove_members_from_groups (
+    group_id:int,
+    user_id:int,
+    db:Session= Depends(get_db),
+    current_user:User = Depends(get_current_user),
+
+):
+    return remove_group_member (
+        group_id=group_id,
+        user_id=user_id,
+        db=db,
+        current_user=current_user,
+    )

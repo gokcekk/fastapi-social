@@ -14,9 +14,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
+from app.models.timestamp_mixin import TimestampMixin
 
-
-# Many-to-many: hangi user hangi gruba üye
 group_members = Table(
     "group_members",
     Base.metadata,
@@ -24,18 +23,27 @@ group_members = Table(
     Column("group_id", Integer, ForeignKey("groups.id", ondelete="CASCADE"), primary_key=True),
 )
 
-
-class Group(Base):
-    """
-    ST-6.1: Basit Group modeli (name, description)
-    """
+class Group(Base, TimestampMixin):
 
     __tablename__ = "groups"  
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False, unique=True, index=True)
     description = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # created_at = Column(DateTime, default=datetime.utcnow)
+
+    # The user who created the group
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Relationship to the User model
+    owner = relationship("User", back_populates="groups_owned")
+
+    # All membership rows for this group
+    memberships = relationship(
+        "GroupMembership",
+        back_populates="group",
+        cascade="all, delete-orphan",
+    )
 
     members = relationship(
         "User",
@@ -73,3 +81,5 @@ class GroupPost(Base):
         "User",
         back_populates="group_posts",
     )
+
+
