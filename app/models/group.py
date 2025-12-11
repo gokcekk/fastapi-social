@@ -6,9 +6,10 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
+from app.models.timestamp_mixin import TimestampMixin
 
 
-class Group(Base):
+class Group(TimestampMixin, Base):
     __tablename__ = "groups"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -18,9 +19,6 @@ class Group(Base):
 
     # Optional description of the group
     description = Column(Text, nullable=True)
-
-    # When the group was created
-    created_at = Column(DateTime, default=datetime.utcnow)
 
     # The user who created the group
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)

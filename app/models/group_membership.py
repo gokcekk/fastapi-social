@@ -6,9 +6,9 @@ from sqlalchemy import Column, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
+from app.models.timestamp_mixin import TimestampMixin
 
-
-class GroupMembership(Base):
+class GroupMembership(TimestampMixin, Base):
     __tablename__ = "group_memberships"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -29,9 +29,6 @@ class GroupMembership(Base):
 
     # Is this user an admin in this group?
     is_admin = Column(Boolean, default=False)
-
-    # When this user joined the group
-    joined_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     group = relationship("Group", back_populates="memberships")

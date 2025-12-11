@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.core.security import SECRET_KEY, ALGORITHM
 from app.models.user import User
+from app.core.messages import Messages
 
 # OAuth2PasswordBearer:
 # - Tells FastAPI that we use "Bearer <token>" in the Authorization header
@@ -33,7 +34,7 @@ def get_current_user(
     # Reusable exception for all "invalid credentials" cases
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials.",
+        detail=Messages.CREDENTIALS_NOT_VALID,
         headers={"WWW-Authenticate": "Bearer"},
     )
 

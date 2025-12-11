@@ -28,7 +28,7 @@ class GroupMemberRead(BaseModel):
     user_id: int
     username: str
     is_admin: bool
-    joined_at: datetime
+    created_at: datetime
 
     class Config:
         from_attributes = True

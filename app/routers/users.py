@@ -9,7 +9,6 @@ from app.models.user import User
 from app.db.database import get_db
 from app.services.user import update_user_profile
 
-
 # All user-related endpoints will be under the /users prefix
 router = APIRouter(
     prefix="/users",

@@ -15,6 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
+from app.models.timestamp_mixin import TimestampMixin
 
 # Association table for "friendships" between users.
 # This is a self-referential many-to-many:
@@ -38,7 +39,7 @@ user_friends = Table(
 )
 
 
-class User(Base):
+class User(TimestampMixin, Base):
     """
     SQLAlchemy ORM model for the "users" table.
 
@@ -76,10 +77,6 @@ class User(Base):
     # - Can be used for soft deactivation (instead of deleting the row)
     is_active = Column(Boolean, default=True)
 
-    # When the user record was created
-    # - Stored in UTC
-    # - Default: current UTC time when the record is inserted
-    created_at = Column(DateTime, default=datetime.utcnow)
 
     # Optional profile fields (user can update these later):
 

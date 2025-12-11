@@ -14,6 +14,7 @@ from app.core.security import (
 from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin
 from app.schemas.auth import Token
+from app.core.messages import Messages
 
 
 def create_user(db: Session, user_in: UserCreate) -> User:
@@ -34,7 +35,7 @@ def create_user(db: Session, user_in: UserCreate) -> User:
         # If the username is taken, return a 400 Bad Request error
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username is already taken.",
+            detail=Messages.USERNAME_TAKEN,
         )
 
     # Check if email already exists
@@ -43,7 +44,7 @@ def create_user(db: Session, user_in: UserCreate) -> User:
         # If the email is already used, return a 400 Bad Request error
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email is already registered.",
+            detail=Messages.EMAIL_REGISTERED, 
         )
 
     # Hash the plain password before storing it in the database
@@ -112,7 +113,7 @@ def login_user(db: Session, user_in: UserLogin) -> Token:
         # If authentication fails, inform the client
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect username or password.",
+            detail=Messages.INCORRECT_USERNAME_OR_PASSWORD, 
         )
 
     # Define how long the token should be valid

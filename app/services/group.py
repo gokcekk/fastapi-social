@@ -7,7 +7,7 @@ from app.models.group import Group
 from app.models.user import User
 from app.schemas.group import GroupCreate, GroupMemberRead, GroupUpdate
 from app.models.group_membership import GroupMembership
-
+from app.core.messages import Messages
 
 def create_group(
     db: Session,
@@ -86,7 +86,7 @@ def update_group(
     if not is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not an admin of this group.",
+            detail=Messages.GROUP_NOT_ADMIN,
         )
 
     # 2) Load the group from the database
@@ -94,7 +94,7 @@ def update_group(
     if db_group is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Group not found.",
+            detail=Messages.GROUP_NOT_FOUND,
         )
 
     # 3) Update fields only if they are provided
@@ -124,7 +124,7 @@ def list_group_members(
     if db_group is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Group not found.",
+            detail=Messages.GROUP_NOT_FOUND,
         )
 
     # (Optional) Here you could check if current_user is a member
@@ -144,7 +144,7 @@ def list_group_members(
             user_id=m.user_id,
             username=m.user.username,
             is_admin=m.is_admin,
-            joined_at=m.joined_at,
+            created_at=m.created_at,
         )
         for m in memberships
     ]
@@ -170,7 +170,7 @@ def remove_group_member(
     if db_group is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Group not found.",
+            detail=Messages.GROUP_NOT_FOUND,
         )
 
     # 2) Check that the current user is an admin in this group
@@ -186,7 +186,7 @@ def remove_group_member(
     if membership_admin is None or not membership_admin.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not an admin of this group.",
+            detail=Messages.GROUP_NOT_ADMIN, 
         )
 
     # 3) Find the membership to remove
@@ -202,7 +202,7 @@ def remove_group_member(
     if membership_to_remove is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Member is not part of this group.",
+            detail=Messages.GROUP_MEMBER_NOT_FOUND,
         )
 
     # 4) Delete the membership and commit
