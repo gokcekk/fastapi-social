@@ -10,6 +10,7 @@ from app.routers.posts import router as posts_router
 from app.routers.friend_request import router as friend_request_router
 from app.routers import chat
 
+from app.routers.group import router as groups_router
 
 
 
@@ -32,6 +33,9 @@ app.include_router(users_router)     # user profile endpoints
 app.include_router(posts_router)     # posts on user walls
 app.include_router(friend_request_router)
 app.include_router(chat.router)
+app.include_router(friend_request_router)  
+app.include_router(groups_router)
+
 
 @app.get("/")
 def read_root():

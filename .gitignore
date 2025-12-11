@@ -209,3 +209,11 @@ __marimo__/
 
 social.db
 *.db
+# macOS
+.DS_Store
+ 
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+app/social.db
