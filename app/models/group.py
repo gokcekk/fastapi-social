@@ -15,12 +15,12 @@ from sqlalchemy.orm import relationship
 
 from app.db.database import Base
 
-group_members = Table(
-    "group_members",
-    Base.metadata,
-    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
-    Column("group_id", Integer, ForeignKey("groups.id", ondelete="CASCADE"), primary_key=True),
-)
+# group_members = Table(
+#     "group_members",
+#     Base.metadata,
+#     Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+#     Column("group_id", Integer, ForeignKey("groups.id", ondelete="CASCADE"), primary_key=True),
+# )
 
 class Group(Base):
 
@@ -51,7 +51,11 @@ class Group(Base):
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Relationship to the User model
-    owner = relationship("User", back_populates="groups_owned")
+ 
+    owner = relationship(
+       "User",
+        back_populates="groups_owned",
+    )
 
     # All membership rows for this group
     memberships = relationship(
@@ -60,11 +64,11 @@ class Group(Base):
         cascade="all, delete-orphan",
     )
 
-    members = relationship(
-        "User",
-        secondary="group_members",
-        back_populates="groups",
-    )
+    # members = relationship(
+    #     "User",
+    #     secondary="group_members",
+    #     back_populates="groups",
+    # )
 
     posts = relationship(
         "GroupPost",

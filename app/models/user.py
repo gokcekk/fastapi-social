@@ -143,3 +143,15 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
+    # groups = relationship(
+    #     "Group",
+    #     secondary="group_members",
+    #     back_populates="members",
+    # )
+
+    group_posts = relationship(
+         "GroupPost",
+         back_populates="author",
+         cascade="all, delete-orphan",
+    )

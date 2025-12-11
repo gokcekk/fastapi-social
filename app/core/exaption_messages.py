@@ -17,3 +17,9 @@ class Messages:
     GROUP_NOT_FOUND = "Group not found."
     GROUP_NOT_ADMIN = "You are not an admin of this group."
     GROUP_MEMBER_NOT_FOUND = "Member is not part of this group."
+    MUST_JOIN_TO_VIEW = "You must join the group to see its posts."
+    MUST_JOIN_TO_POST = "You must join the group to create posts."
+    ALREADY_MEMBER = "Already a member of this group."
+    NOT_A_MEMBER = "You are not a member of this group."
+
+    
