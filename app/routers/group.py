@@ -182,3 +182,8 @@ def create_group_post(
    db.refresh(group_post)
 
    return group_post
+
+
+
+
+#User Story 8
