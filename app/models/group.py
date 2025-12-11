@@ -15,8 +15,6 @@ from sqlalchemy.orm import relationship
 
 from app.db.database import Base
 
-
-# Many-to-many: hangi user hangi gruba üye
 group_members = Table(
     "group_members",
     Base.metadata,
@@ -26,9 +24,6 @@ group_members = Table(
 
 
 class Group(Base):
-    """
-    ST-6.1: Basit Group modeli (name, description)
-    """
 
     __tablename__ = "groups"  
 
@@ -51,10 +46,6 @@ class Group(Base):
 
 
 class GroupPost(Base):
-    """
-    ST-6.6: group_id, user_id, content
-    """
-
     __tablename__ = "group_posts"
 
     id = Column(Integer, primary_key=True, index=True)
