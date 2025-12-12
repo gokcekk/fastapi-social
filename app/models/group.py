@@ -78,10 +78,6 @@ class Group(Base):
 
 
 class GroupPost(Base):
-    """
-    ST-6.6: group_id, user_id, content
-    """
-
     __tablename__ = "group_posts"
 
     id = Column(Integer, primary_key=True, index=True)

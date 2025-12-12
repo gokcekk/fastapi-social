@@ -227,6 +227,7 @@ def create_group_post_endpoint(
     """
     Create a new post in the given group.
 
+<<<<<<< HEAD
     - Only group members are allowed to create posts.
     - Membership + 403 logic lives in svc_create_group_post.
     """
@@ -318,3 +319,11 @@ def remove_members_from_groups(
     )
     # 204 No Content: nothing is returned in the body
     return
+=======
+   return group_post
+
+
+
+
+#User Story 8
+>>>>>>> develop
