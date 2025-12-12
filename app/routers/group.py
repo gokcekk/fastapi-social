@@ -4,7 +4,6 @@ Group endpoints for Story 6 and Story 8.
 
 IMPORTANT:
 - For Story 6 (basic group CRUD) we kept most logic in this router,
-  because this is your friend's original implementation.
 - For Story 8 (admin operations, membership rules, etc.) we moved
   the business logic into app.services.group and call it from here.
 """
