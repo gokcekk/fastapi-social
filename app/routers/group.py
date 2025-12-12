@@ -6,7 +6,7 @@ from app.models.group import Group, GroupPost
 from app.models.group import Group
 from app.schemas.group import GroupOut,GroupPostOut,GroupPostCreate,GroupCreate
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.core.auth import get_current_user
 
 
 router = APIRouter(
@@ -182,3 +182,8 @@ def create_group_post(
    db.refresh(group_post)
 
    return group_post
+
+
+
+
+#User Story 8
