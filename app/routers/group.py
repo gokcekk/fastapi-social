@@ -98,7 +98,9 @@ def create_group(
 
 
 """ST-6.2: The endpoint that lists all groups."""
-@router.get("/", response_model=list[GroupOut])
+@router.get(
+        "/", 
+        response_model=list[GroupOut])
 def list_groups(
     db: Session = Depends(get_db),
 ):
@@ -112,7 +114,10 @@ def list_groups(
 
 
 """ST-6.3: Bring the detail of a single group."""
-@router.get("/{group_id}", response_model=GroupOut)
+@router.get(
+        "/{group_id}", 
+        response_model=GroupOut
+        )
 def get_group(
     group_id: int,
     db: Session = Depends(get_db),

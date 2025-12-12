@@ -60,7 +60,10 @@ def _is_member(db: Session, group_id: int, user_id: int) -> bool:
         GroupMembership.user_id == user_id,
     ).first() is not None
 
-def join_group(db: Session, group_id: int, current_user: User) -> dict:
+def join_group(
+        db: Session, 
+        group_id: int, 
+        current_user: User) -> dict:
     """
     Let the current authenticated user join a group.
 
