@@ -225,8 +225,8 @@ def update_group(
 
 
     # 3) Update fields only if they are provided
-    if group_in.name is not None:
-        db_group.name = group_in.name
+    if group_in.name is not None:                #group_in: new from client 
+        db_group.name = group_in.name            #db_group: old from db
 
     if group_in.description is not None:
         db_group.description = group_in.description
