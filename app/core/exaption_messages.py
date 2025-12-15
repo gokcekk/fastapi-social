@@ -21,5 +21,5 @@ class Messages:
     MUST_JOIN_TO_POST = "You must join the group to create posts."
     ALREADY_MEMBER = "Already a member of this group."
     NOT_A_MEMBER = "You are not a member of this group."
-
-    
+    GROUP_JOIN_SUCCESS = "Joined group successfully."
+    GROUP_LEAVE_SUCCESS = "Left group successfully."

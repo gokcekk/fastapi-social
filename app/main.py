@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI
 
+from app.core.exceptions import register_exception_handlers
 from app.db.database import Base, engine
 from app import models  # make sure all models are imported
 from app.routers.auth import router as auth_router
@@ -11,7 +12,6 @@ from app.routers.friend_request import router as friend_request_router
 from app.routers import chat
 
 from app.routers.group import router as groups_router
-
 
 
 # Main FastAPI application
@@ -25,6 +25,7 @@ app = FastAPI(
 # This is suitable for local development or very early stages
 # In a real project you normally use migrations (for example Alembic)
 Base.metadata.create_all(bind=engine)
+register_exception_handlers(app)
 
 
 # Include routers

@@ -38,12 +38,6 @@ class GroupPostOut(GroupPostBase):
 
 #story8
 
-class GroupMemberRead(BaseModel):
-    user_id: int
-    is_admin: bool
-
-    class Config:
-        from_attributes = True
 
 
 class GroupUpdate(BaseModel):
@@ -59,3 +53,4 @@ class GroupMemberRead(BaseModel):
 
     class Config:
         from_attributes = True
+
