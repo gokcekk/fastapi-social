@@ -151,10 +151,13 @@ def list_group_posts(
     )
     return posts
 
-def create_group_post(db: Session, group_id: int, post_in: GroupPostCreate, current_user: User) -> GroupPost:
-    """
-    Grupta yeni post oluşturur. Sadece üyeler post atabilir.
-    """
+def create_group_post(
+        db: Session, 
+        group_id: int, 
+        post_in: GroupPostCreate, 
+        current_user: User
+        ) -> GroupPost:
+
     _get_group_or_404(db, group_id)
 
     if not _is_member(db, group_id, current_user.id):  
