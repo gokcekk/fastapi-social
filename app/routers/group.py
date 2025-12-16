@@ -293,7 +293,7 @@ def list_group_members_endpoint(
 
 @router.delete(
     "/{group_id}/members/{user_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
 )
 def remove_members_from_groups(
     group_id: int,
@@ -310,11 +310,10 @@ def remove_members_from_groups(
         * current user is admin (403)
         * target member exists (404)
     """
-    remove_group_member(
+    return remove_group_member(
         group_id=group_id,
         user_id=user_id,
         db=db,
         current_user=current_user,
     )
-    # 204 No Content: nothing is returned in the body
-    return
+    

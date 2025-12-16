@@ -23,3 +23,5 @@ class Messages:
     NOT_A_MEMBER = "You are not a member of this group."
     GROUP_JOIN_SUCCESS = "Joined group successfully."
     GROUP_LEAVE_SUCCESS = "Left group successfully."
+
+    GROUP_MEMBER_REMOVED = "Member removed from the group."
