@@ -265,17 +265,19 @@ def list_group_members(
     )
 
     # 3) Map memberships to GroupMemberRead objects
-    members_read: list[GroupMemberRead] = [
-        GroupMemberRead(
-            user_id=m.user_id,
-            username=m.user.username,
-            is_admin=m.is_admin,
-            created_at=m.created_at,
-        )
-        for m in memberships
-    ]
+    members_read = []
+
+    for m in memberships:
+     member = GroupMemberRead(
+        user_id=m.user_id,
+        username=m.user.username,
+        is_admin=m.is_admin,
+        created_at=m.created_at,
+    )
+     members_read.append(member)
 
     return members_read
+
 
 
 
