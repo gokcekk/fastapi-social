@@ -8,16 +8,16 @@ class MessageBase(BaseModel):
 
 class MessageCreate(MessageBase):
     """
-    Var olan bir conversation içinde mesaj atarken kullanılır.
-    Sadece content yeterli, chat_id path'ten geliyor.
+    Used to send a message in an existing conversation.
+    chat_id is taken from the URL path.
     """
     pass
 
 
 class DirectMessageCreate(MessageBase):
     """
-    Bir kullanıcıya (receiver_id) göre yeni sohbet başlatmak
-    veya var olan sohbeti kullanmak için.
+    Used to start or continue a chat with a user.
+    receiver_id is the target user.
     """
     receiver_id: int
 
