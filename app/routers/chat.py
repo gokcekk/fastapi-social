@@ -12,7 +12,7 @@ from app.models.message import Message
 # ✅ Router MUST be defined before usage
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
-# Active WebSocket connections per conversation
+# Active WebSocket connections per conversation.
 active_connections: Dict[int, List[WebSocket]] = {}
 
 
@@ -39,7 +39,7 @@ async def websocket_chat(websocket: WebSocket, chat_id: int):
     # 🔹 DB session (MANUEL)
     db = get_db_session()
 
-    # 🔹 Conversation kontrolü
+    # 🔹 Conversation control
     convo = db.get(Conversation, chat_id)
     if not convo or sender_id not in [convo.user1_id, convo.user2_id]:
         db.close()
