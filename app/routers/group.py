@@ -100,7 +100,8 @@ def create_group(
 """ST-6.2: The endpoint that lists all groups."""
 @router.get(
         "/", 
-        response_model=list[GroupOut])
+        response_model=list[GroupOut],
+        status_code=status.HTTP_200_OK)
 def list_groups(
     db: Session = Depends(get_db),
 ):
@@ -116,7 +117,8 @@ def list_groups(
 """ST-6.3: Bring the detail of a single group."""
 @router.get(
         "/{group_id}", 
-        response_model=GroupOut
+        response_model=GroupOut,
+        status_code=status.HTTP_200_OK
         )
 def get_group(
     group_id: int,
