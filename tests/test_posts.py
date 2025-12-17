@@ -73,7 +73,7 @@ def test_create_post():
 def test_get_posts():
     headers = create_test_user()
 
-    # Create one post
+    # Create a post first
     client.post("/post", json={"content": "My post"}, headers=headers)
 
     # Fetch all posts
@@ -81,3 +81,53 @@ def test_get_posts():
     assert response.status_code == 200
     assert len(response.json()) >= 1
 
+# Test updating a post
+def test_update_post():
+    headers = create_test_user()
+
+    # Create a post first
+    create_resp = client.post(
+        "/post",
+        json={"content": "Original content"},
+        headers=headers
+    )
+    assert create_resp.status_code == 201
+
+    post_id = create_resp.json()["id"]
+
+    # Update the post
+    update_resp = client.put(
+        f"/post/{post_id}",
+        json={"content": "Updated content"},
+        headers=headers
+    )
+
+    assert update_resp.status_code == 200
+    assert update_resp.json()["content"] == "Updated content"
+
+# Test deleting a post
+def test_delete_post():
+    headers = create_test_user()
+
+    # Create a post first
+    create_resp = client.post(
+        "/post",
+        json={"content": "Post to be deleted"},
+        headers=headers
+    )
+    assert create_resp.status_code == 201
+
+    post_id = create_resp.json()["id"]
+
+    # Delete the post
+    delete_resp = client.delete(
+        f"/post/{post_id}",
+        headers=headers
+    )
+
+    assert delete_resp.status_code == 204
+    assert delete_resp.content == b""
+
+    # Confirm the post no longer exists
+    get_resp = client.get(f"/post/{post_id}", headers=headers)
+    assert get_resp.status_code == 404
