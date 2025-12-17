@@ -14,13 +14,12 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.services import group as group_service
-from app.core.exaption_messages import Messages
-from app.core.exceptions import ForbiddenError, BadRequestError, NotFoundError
 from app.schemas.group import GroupUpdate, GroupPostCreate
+from app.services import group as group_service
 
 
 class DummyColumn:
@@ -29,12 +28,10 @@ class DummyColumn:
         self.name = name
 
     def __eq__(self, other):
-        # Any object is fine, MagicMock filter accepts it.
         return (self.name, "==", other)
 
 
 class FakeMembership:
-    # Mimic SQLAlchemy model class attributes used in query filters
     group_id = DummyColumn("group_id")
     user_id = DummyColumn("user_id")
 
@@ -68,14 +65,16 @@ def group_id():
 
 
 # ---------- join_group ----------
-def test_join_group_returns_already_member_when_exists(db, current_user, group_id, monkeypatch):
+def test_join_group_raises_conflict_when_already_member(db, current_user, group_id, monkeypatch):
     monkeypatch.setattr(group_service, "get_group_or_404", lambda db, group_id: object())
 
     db.query.return_value.filter.return_value.first.return_value = SimpleNamespace()
 
-    result = group_service.join_group(db=db, group_id=group_id, current_user=current_user)
+    with pytest.raises(HTTPException) as exc:
+        group_service.join_group(db=db, group_id=group_id, current_user=current_user)
 
-    assert result == {"detail": Messages.ALREADY_MEMBER}
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "You are already a member of this group."
     db.add.assert_not_called()
     db.commit.assert_not_called()
 
@@ -88,7 +87,7 @@ def test_join_group_creates_membership_when_not_member(db, current_user, group_i
 
     result = group_service.join_group(db=db, group_id=group_id, current_user=current_user)
 
-    assert result == {"detail": Messages.GROUP_JOIN_SUCCESS}
+    assert result == {"detail": "Joined the group successfully."}
 
     db.add.assert_called_once()
     added_obj = db.add.call_args[0][0]
@@ -109,7 +108,7 @@ def test_join_group_integrity_error_is_idempotent(db, current_user, group_id, mo
 
     result = group_service.join_group(db=db, group_id=group_id, current_user=current_user)
 
-    assert result == {"detail": Messages.ALREADY_MEMBER}
+    assert result == {"detail": "You are already a member of this group."}
     db.rollback.assert_called_once()
 
 
@@ -119,10 +118,11 @@ def test_leave_group_raises_when_not_member(db, current_user, group_id, monkeypa
 
     db.query.return_value.filter.return_value.first.return_value = None
 
-    with pytest.raises(BadRequestError) as exc:
+    with pytest.raises(HTTPException) as exc:
         group_service.leave_group(db=db, group_id=group_id, current_user=current_user)
 
-    assert Messages.NOT_A_MEMBER in str(exc.value)
+    assert exc.value.status_code == 400
+    assert exc.value.detail == "You are not a member of this group."
 
 
 def test_leave_group_deletes_membership(db, current_user, group_id, monkeypatch):
@@ -133,7 +133,7 @@ def test_leave_group_deletes_membership(db, current_user, group_id, monkeypatch)
 
     result = group_service.leave_group(db=db, group_id=group_id, current_user=current_user)
 
-    assert result == {"detail": Messages.GROUP_LEAVE_SUCCESS}
+    assert result == {"detail": "Left the group successfully."}
     db.delete.assert_called_once_with(membership)
     db.commit.assert_called_once()
 
@@ -143,10 +143,11 @@ def test_list_group_posts_forbidden_when_not_member(db, current_user, group_id, 
     monkeypatch.setattr(group_service, "get_group_or_404", lambda db, group_id: object())
     monkeypatch.setattr(group_service, "is_member", lambda db, group_id, user_id: False)
 
-    with pytest.raises(ForbiddenError) as exc:
+    with pytest.raises(HTTPException) as exc:
         group_service.list_group_posts(db=db, group_id=group_id, current_user=current_user)
 
-    assert Messages.MUST_JOIN_TO_VIEW in str(exc.value)
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "You must join the group to view posts."
 
 
 def test_list_group_posts_returns_posts_when_member(db, current_user, group_id, monkeypatch):
@@ -166,7 +167,7 @@ def test_create_group_post_forbidden_when_not_member(db, current_user, group_id,
     monkeypatch.setattr(group_service, "get_group_or_404", lambda db, group_id: object())
     monkeypatch.setattr(group_service, "is_member", lambda db, group_id, user_id: False)
 
-    with pytest.raises(ForbiddenError) as exc:
+    with pytest.raises(HTTPException) as exc:
         group_service.create_group_post(
             db=db,
             group_id=group_id,
@@ -174,7 +175,8 @@ def test_create_group_post_forbidden_when_not_member(db, current_user, group_id,
             current_user=current_user,
         )
 
-    assert Messages.MUST_JOIN_TO_POST in str(exc.value)
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "You must join the group to create a post."
 
 
 def test_create_group_post_creates_post_when_member(db, current_user, group_id, monkeypatch):
@@ -208,7 +210,7 @@ def test_update_group_forbidden_when_not_admin(db, current_user, group_id, monke
     monkeypatch.setattr(group_service, "get_group_or_404", lambda db, group_id: fake_group)
     monkeypatch.setattr(group_service, "is_user_admin_in_group", lambda db, group_id, current_user: False)
 
-    with pytest.raises(ForbiddenError) as exc:
+    with pytest.raises(HTTPException) as exc:
         group_service.update_group(
             db=db,
             group_id=group_id,
@@ -216,7 +218,8 @@ def test_update_group_forbidden_when_not_admin(db, current_user, group_id, monke
             current_user=current_user,
         )
 
-    assert Messages.GROUP_NOT_ADMIN in str(exc.value)
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "Only group admins can update this group."
 
 
 def test_update_group_updates_fields_when_admin(db, current_user, group_id, monkeypatch):
@@ -243,10 +246,11 @@ def test_list_group_members_forbidden_when_not_member(db, current_user, group_id
     monkeypatch.setattr(group_service, "get_group_or_404", lambda db, group_id: object())
     monkeypatch.setattr(group_service, "is_member", lambda db, group_id, user_id: False)
 
-    with pytest.raises(ForbiddenError) as exc:
+    with pytest.raises(HTTPException) as exc:
         group_service.list_group_members(db=db, group_id=group_id, current_user=current_user)
 
-    assert Messages.MUST_JOIN_TO_VIEW in str(exc.value)
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "You must join the group to view members."
 
 
 def test_list_group_members_maps_to_schema(db, current_user, group_id, monkeypatch):
@@ -285,7 +289,7 @@ def test_remove_group_member_requires_admin(db, current_user, group_id, monkeypa
     monkeypatch.setattr(group_service, "get_group_or_404", lambda db, group_id: object())
     monkeypatch.setattr(group_service, "is_user_admin_in_group", lambda db, group_id, current_user: False)
 
-    with pytest.raises(ForbiddenError) as exc:
+    with pytest.raises(HTTPException) as exc:
         group_service.remove_group_member(
             db=db,
             group_id=group_id,
@@ -293,7 +297,8 @@ def test_remove_group_member_requires_admin(db, current_user, group_id, monkeypa
             current_user=current_user,
         )
 
-    assert Messages.GROUP_NOT_ADMIN in str(exc.value)
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "Only group admins can perform this action."
 
 
 def test_remove_group_member_raises_when_target_missing(db, current_user, group_id, monkeypatch):
@@ -302,7 +307,7 @@ def test_remove_group_member_raises_when_target_missing(db, current_user, group_
 
     db.query.return_value.filter.return_value.first.return_value = None
 
-    with pytest.raises(NotFoundError) as exc:
+    with pytest.raises(HTTPException) as exc:
         group_service.remove_group_member(
             db=db,
             group_id=group_id,
@@ -310,7 +315,8 @@ def test_remove_group_member_raises_when_target_missing(db, current_user, group_
             current_user=current_user,
         )
 
-    assert Messages.GROUP_MEMBER_NOT_FOUND in str(exc.value)
+    assert exc.value.status_code == 404
+    assert exc.value.detail == "Group member not found."
 
 
 def test_remove_group_member_deletes_when_found(db, current_user, group_id, monkeypatch):
@@ -329,5 +335,3 @@ def test_remove_group_member_deletes_when_found(db, current_user, group_id, monk
 
     db.delete.assert_called_once_with(membership)
     db.commit.assert_called_once()
-
-#python -m pytest -q tests\services\test_group_service.py

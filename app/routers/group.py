@@ -100,7 +100,8 @@ def create_group(
 """ST-6.2: The endpoint that lists all groups."""
 @router.get(
         "/", 
-        response_model=list[GroupOut])
+        response_model=list[GroupOut],
+        status_code=status.HTTP_200_OK)
 def list_groups(
     db: Session = Depends(get_db),
 ):
@@ -116,7 +117,8 @@ def list_groups(
 """ST-6.3: Bring the detail of a single group."""
 @router.get(
         "/{group_id}", 
-        response_model=GroupOut
+        response_model=GroupOut,
+        status_code=status.HTTP_200_OK
         )
 def get_group(
     group_id: int,
@@ -293,7 +295,7 @@ def list_group_members_endpoint(
 
 @router.delete(
     "/{group_id}/members/{user_id}",
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 def remove_members_from_groups(
     group_id: int,
@@ -310,10 +312,11 @@ def remove_members_from_groups(
         * current user is admin (403)
         * target member exists (404)
     """
-    return remove_group_member(
+    remove_group_member(
         group_id=group_id,
         user_id=user_id,
         db=db,
         current_user=current_user,
     )
-    
+    # 204 No Content: nothing is returned in the body
+    return
