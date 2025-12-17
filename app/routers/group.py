@@ -140,7 +140,7 @@ def get_group(
 """ST-6.4: Current user joins this group."""
 @router.post(
     "/{group_id}/join",
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_201_CREATED,
 )
 def join_group_endpoint(
     group_id: int,
