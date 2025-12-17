@@ -1,5 +1,5 @@
 # app/routers/auth.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -16,8 +16,10 @@ router = APIRouter(
     tags=["auth"],
 )
 
-
-@router.post("/register", response_model=UserRead)
+@router.post(
+        "/register", 
+        response_model=UserRead,
+        status_code=status.HTTP_201_CREATED,)
 def register(
     user_in: UserCreate,
     db: Session = Depends(get_db),
