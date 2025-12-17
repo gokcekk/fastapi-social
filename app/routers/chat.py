@@ -1,75 +1,86 @@
 from typing import Dict, List
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from app.db.database import SessionLocal
 from app.core.security import SECRET_KEY, ALGORITHM
+from app.db.database import SessionLocal
 from app.models.conversation import Conversation
 from app.models.message import Message
 
-# ✅ Router MUST be defined before usage
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
-# Active WebSocket connections per conversation.
+# chat_id -> active websocket connections
 active_connections: Dict[int, List[WebSocket]] = {}
 
 
-def get_db_session() -> Session:
+def _decode_sender_id(token: str) -> int:
+    """Decode JWT and return sender user_id from 'sub'."""
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    sub = payload.get("sub")
+    return int(sub)
+
+
+def _get_db() -> Session:
+    """Create a DB session for WebSocket usage."""
     return SessionLocal()
 
 
 @router.websocket("/ws/{chat_id}")
 async def websocket_chat(websocket: WebSocket, chat_id: int):
-    # 🔹 Token al
+    """
+    WebSocket endpoint for realtime chat.
+    - Auth via ?token=JWT
+    - Saves messages to DB
+    - Broadcasts messages to other clients in the same chat
+    """
     token = websocket.query_params.get("token")
     if not token:
-        await websocket.close(code=1008)
+        await websocket.close(code=1008)  # Policy violation
         return
-
-    # 🔹 Token decode
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        sender_id = int(payload.get("sub"))
-    except (JWTError, TypeError, ValueError):
-        await websocket.close(code=1008)
-        return
-
-    # 🔹 DB session (MANUEL)
-    db = get_db_session()
-
-    # 🔹 Conversation control
-    convo = db.get(Conversation, chat_id)
-    if not convo or sender_id not in [convo.user1_id, convo.user2_id]:
-        db.close()
-        await websocket.close(code=1008)
-        return
-
-    # 🔹 ACCEPT EN BAŞTA
-    await websocket.accept()
-    active_connections.setdefault(chat_id, []).append(websocket)
 
     try:
-        while True:
-            content = await websocket.receive_text()
+        sender_id = _decode_sender_id(token)
+    except (JWTError, ValueError, TypeError):
+        await websocket.close(code=1008)
+        return
 
-            # 🔹 Mesajı DB’ye kaydet
-            message = Message(
-                conversation_id=chat_id,
-                sender_id=sender_id,
-                content=content,
-            )
-            db.add(message)
-            db.commit()
+    db = _get_db()
 
-            # 🔹 Diğer clientlara gönder
-            for conn in active_connections.get(chat_id, []):
-                if conn != websocket:
-                    await conn.send_text(
-                        f"{sender_id}: {content}"
-                    )
+    try:
+        convo = db.get(Conversation, chat_id)
+        if not convo or sender_id not in (convo.user1_id, convo.user2_id):
+            await websocket.close(code=1008)
+            return
 
-    except WebSocketDisconnect:
-        active_connections[chat_id].remove(websocket)
+        await websocket.accept()
+        active_connections.setdefault(chat_id, []).append(websocket)
+
+        try:
+            while True:
+                content = await websocket.receive_text()
+
+                # Persist message
+                message = Message(
+                    conversation_id=chat_id,
+                    sender_id=sender_id,
+                    content=content,
+                )
+                db.add(message)
+                db.commit()
+
+                # Broadcast to other clients (same chat)
+                for conn in active_connections.get(chat_id, []):
+                    if conn is not websocket:
+                        await conn.send_text(f"{sender_id}: {content}")
+
+        except WebSocketDisconnect:
+            # Client disconnected
+            pass
+        finally:
+            if chat_id in active_connections and websocket in active_connections[chat_id]:
+                active_connections[chat_id].remove(websocket)
+
+    finally:
         db.close()
