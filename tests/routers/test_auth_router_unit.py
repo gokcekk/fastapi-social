@@ -93,7 +93,7 @@ def test_register_success(client, mock_create_user):
 
     res = client.post("/auth/register", json=payload)
 
-    assert res.status_code == status.HTTP_200_OK
+    assert res.status_code == status.HTTP_201_CREATED
     data = res.json()
     assert data["id"] == 1
     assert data["username"] == "alice"
@@ -138,8 +138,7 @@ def test_logout_success(app, client):
     app.dependency_overrides[auth_router_module.get_current_user] = override_get_current_user
 
     res = client.post("/auth/logout")
-    assert res.status_code == status.HTTP_200_OK
-    assert "detail" in res.json()
+    assert res.status_code == status.HTTP_204_NO_CONTENT
 
     app.dependency_overrides.pop(auth_router_module.get_current_user, None)
 

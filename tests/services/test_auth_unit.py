@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from datetime import datetime, timezone
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 
@@ -94,7 +94,7 @@ def test_register_calls_create_user_and_returns_user(client, monkeypatch, db):
     }
 
     res = client.post("/auth/register", json=payload)
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_201_CREATED
 
     data = res.json()
     assert data["id"] == 1
@@ -143,8 +143,5 @@ def test_logout_requires_auth_and_returns_message(client):
     # get_current_user is overridden to always return a user,
     # so logout should succeed.
     res = client.post("/auth/logout")
-    assert res.status_code == 200
-
-    data = res.json()
-    assert "detail" in data
-    assert "Logged out successfully" in data["detail"]
+    assert res.status_code == status.HTTP_204_NO_CONTENT
+    assert res.content == b""
