@@ -46,6 +46,7 @@ def create_group(
 @router.get("/",response_model=list[GroupOut])
 def list_groups(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     groups = db.query(Group).all()
     return groups
@@ -55,6 +56,7 @@ def list_groups(
 def get_group(
     group_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
    group = db.query(Group).filter(Group.id == group_id).first()
 
