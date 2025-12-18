@@ -10,5 +10,5 @@ class Conversation(Base):
     user1_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user2_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    # Bir sohbetteki tüm mesajlar
+    # All messages in a chat
     messages = relationship("Message", back_populates="conversation")

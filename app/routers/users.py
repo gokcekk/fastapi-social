@@ -1,6 +1,6 @@
 #app/routers/users.py
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 
@@ -16,13 +16,20 @@ router = APIRouter(
 )
 
 
-@router.get("/me", response_model=UserRead)
+@router.get(
+        "/me", 
+        response_model=UserRead,
+        status_code=status.HTTP_200_OK,
+        )
 def read_current_user(current_user: User = Depends(get_current_user)):
     """Return the profile of the currently authenticated user."""
     return current_user
 
 
-@router.put("/me", response_model=UserRead)
+@router.put(
+        "/me", 
+        response_model=UserRead,
+        status_code=status.HTTP_201_CREATED)
 def update_current_user(
     user_update: UserUpdate,
     db: Session = Depends(get_db),

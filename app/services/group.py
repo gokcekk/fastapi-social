@@ -1,5 +1,6 @@
 # app/services/group.py
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from sqlalchemy.exc import IntegrityError
@@ -8,8 +9,9 @@ from app.models.group import Group, GroupPost
 from app.models.user import User
 from app.schemas.group import GroupMemberRead, GroupUpdate, GroupPostCreate    
 from app.models.group_membership import GroupMembership
-from app.core.exaption_messages import Messages
-from app.core.exceptions import NotFoundError, ForbiddenError, BadRequestError  
+
+from app.services.group_helpers import get_group_or_404, is_member, is_user_admin_in_group
+
 
 
 # def create_group(
@@ -44,23 +46,6 @@ from app.core.exceptions import NotFoundError, ForbiddenError, BadRequestError
 
 #     return db_group
 
-def _get_group_or_404(
-        db: Session, 
-        group_id: int
-        ) -> Group:
-
-    group = db.query(Group).filter(Group.id == group_id).first()
-    if not group:
-        raise NotFoundError(Messages.GROUP_NOT_FOUND,
-        )
-    return group
-
-def _is_member(db: Session, group_id: int, user_id: int) -> bool:
-
-    return db.query(GroupMembership).filter(
-        GroupMembership.group_id == group_id,
-        GroupMembership.user_id == user_id,
-    ).first() is not None  
 
 def join_group(
         db: Session, 
@@ -76,7 +61,7 @@ def join_group(
     """
 
     # 1) Ensure the group exists (404 if not)
-    _get_group_or_404(db, group_id)
+    get_group_or_404(db, group_id)
 
     # 2) Check if the user is already a member of this group
     existing = (
@@ -89,8 +74,10 @@ def join_group(
     )
 
     if existing:
-        # We keep this idempotent: no error, just a "already member" message
-        return {"detail": Messages.ALREADY_MEMBER}
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You are already a member of this group.",
+    )
 
     # 3) Create a new membership row (normal member, not admin)
     membership = GroupMembership(
@@ -106,26 +93,31 @@ def join_group(
     except IntegrityError:
         # In case of a race condition or duplicate insert, ensure DB is clean
         db.rollback()
-        return {"detail": Messages.ALREADY_MEMBER}
+        return {"detail": "You are already a member of this group."}
 
-    return {"detail": Messages.GROUP_JOIN_SUCCESS}
+    return {"detail": "Joined the group successfully."}
+
 
 
 
 def leave_group(db: Session, group_id: int, current_user: User) -> dict:
 
-    _get_group_or_404(db, group_id)
+    get_group_or_404(db, group_id)
 
     membership = db.query(GroupMembership).filter(
         GroupMembership.group_id == group_id,
         GroupMembership.user_id == current_user.id,
     ).first()
     if not membership:
-        raise BadRequestError(Messages.NOT_A_MEMBER)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You are not a member of this group.",
+    )
+
 
     db.delete(membership)
     db.commit()
-    return {"detail": Messages.GROUP_LEAVE_SUCCESS}
+    return {"detail": "Left the group successfully."}
 
 
 # ===========================
@@ -137,10 +129,14 @@ def list_group_posts(
         current_user: User
         ) -> List[GroupPost]:
 
-    _get_group_or_404(db, group_id)
+    get_group_or_404(db, group_id)
 
-    if not _is_member(db, group_id, current_user.id):  
-        raise ForbiddenError(Messages.MUST_JOIN_TO_VIEW)
+    if not is_member(db, group_id, current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must join the group to view posts.",
+    )
+
 
 
     posts = (
@@ -158,10 +154,14 @@ def create_group_post(
         current_user: User
         ) -> GroupPost:
 
-    _get_group_or_404(db, group_id)
+    get_group_or_404(db, group_id)
 
-    if not _is_member(db, group_id, current_user.id):  
-        raise ForbiddenError(Messages.MUST_JOIN_TO_POST)
+    if not is_member(db, group_id, current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must join the group to create a post.",
+    )
+
 
 
     post = GroupPost(
@@ -176,29 +176,6 @@ def create_group_post(
 
 
 
-def is_user_admin_in_group(
-    db: Session,
-    group_id: int,
-    current_user: User,
-) -> bool:
-    """
-    Return True if current_user is an admin in the given group, else False.
-    """
-    membership = (
-        db.query(GroupMembership)
-        .filter(
-            GroupMembership.group_id == group_id,
-            GroupMembership.user_id == current_user.id,
-        )
-        .first()
-    )
-
-    if membership is None:
-        return False
-    if membership.is_admin:
-        return True
-
-    return False
 
 
 def update_group(
@@ -212,7 +189,7 @@ def update_group(
     """
 
     # 2) Load the group from the database
-    db_group = _get_group_or_404(db, group_id)
+    db_group = get_group_or_404(db, group_id)
 
     # 1) Check if current_user is admin in this group
     is_admin = is_user_admin_in_group(
@@ -221,7 +198,11 @@ def update_group(
         current_user=current_user,
     )
     if not is_admin:
-        raise ForbiddenError(Messages.GROUP_NOT_ADMIN)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only group admins can update this group.",
+    )
+
 
 
     # 3) Update fields only if they are provided
@@ -247,12 +228,16 @@ def list_group_members(
     """
 
     # 1) Check if the group exists
-    _get_group_or_404(db, group_id)
+    get_group_or_404(db, group_id)
 
     # (Optional) Here you could check if current_user is a member
     # or admin before listing members, if you want stricter rules.
-    if not _is_member(db, group_id, current_user.id):
-        raise ForbiddenError(Messages.MUST_JOIN_TO_VIEW)
+    if not is_member(db, group_id, current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must join the group to view members.",
+    )
+
 
 
 
@@ -265,17 +250,19 @@ def list_group_members(
     )
 
     # 3) Map memberships to GroupMemberRead objects
-    members_read: list[GroupMemberRead] = [
-        GroupMemberRead(
-            user_id=m.user_id,
-            username=m.user.username,
-            is_admin=m.is_admin,
-            created_at=m.created_at,
-        )
-        for m in memberships
-    ]
+    members_read = []
+
+    for m in memberships:
+     member = GroupMemberRead(
+        user_id=m.user_id,
+        username=m.user.username,
+        is_admin=m.is_admin,
+        created_at=m.created_at,
+    )
+     members_read.append(member)
 
     return members_read
+
 
 
 
@@ -292,12 +279,16 @@ def remove_group_member(
     """
 
     # 1) Check that the group exists
-    _get_group_or_404(db, group_id)
+    get_group_or_404(db, group_id)
 
     # 2) Check that the current user is an admin in this group
     is_admin = is_user_admin_in_group(db=db, group_id=group_id, current_user=current_user)
     if not is_admin:
-      raise ForbiddenError(Messages.GROUP_NOT_ADMIN)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only group admins can perform this action.",
+    )
+
 
 
     # 3) Find the membership to remove
@@ -311,9 +302,15 @@ def remove_group_member(
     )
 
     if membership_to_remove is None:
-        raise NotFoundError(Messages.GROUP_MEMBER_NOT_FOUND)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group member not found.",
+    )
+
 
     # 4) Delete the membership and commit
     db.delete(membership_to_remove)
     db.commit()
-    # 5) No return value is needed (204 No Content in the endpoint)
+    return
+    
+

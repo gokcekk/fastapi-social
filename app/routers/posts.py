@@ -17,7 +17,7 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=PostSchema, status_code=201)
+@router.post("/", response_model=PostSchema, status_code=status.HTTP_201_CREATED)
 def create_post(
     post: PostCreate,
     db: Session = Depends(get_db),
@@ -143,7 +143,7 @@ def update_post(
     return post
 
 
-@router.delete("/{post_id}")
+@router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(
     post_id: int,
     db: Session = Depends(get_db),
@@ -160,6 +160,5 @@ def delete_post(
 
     db.delete(post)
     db.commit()
-    return {"detail": "Post deleted"}
 
 
