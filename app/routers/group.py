@@ -19,7 +19,7 @@ router = APIRouter(
 @router.post("/", response_model=GroupOut, status_code=status.HTTP_201_CREATED)
 def create_group(
    group_in: GroupCreate,
-   db:Session = Depends(get_db)
+   db:Session = Depends(get_db),
 ):
 #check if there is a group with the same name
      existing =db.query(Group).filter(Group.name == group_in.name).first()
