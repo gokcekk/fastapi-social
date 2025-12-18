@@ -14,5 +14,5 @@ class Message(Base):
     content = Column(Text, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-    # Mesajın ait olduğu sohbet
+    # The chat the message belongs to
     conversation = relationship("Conversation", back_populates="messages")
